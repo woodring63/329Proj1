@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     String mCurrentPhotoPath;
     boolean detectSuccess = false;
-    boolean recognizeSuccess = false;
+    boolean recognizeSuccess;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.d("KAIROS DEMO", response);
                 if(response.contains("failure")){
+                    Log.v("Test", "Nope");
                     recognizeSuccess = false;
                 }
                 else{
@@ -125,10 +126,12 @@ public class MainActivity extends AppCompatActivity {
                         try{
                             myKairos.recognize(image, "students", "FULL", "0.75", "0.25", "1", listener);
                             if(recognizeSuccess == false){
-
+                                Intent i = new Intent(getApplicationContext(), EnterNewStudentActivity.class);
+                                i.putExtra("filename", mCurrentPhotoPath);
+                                startActivity(i);
                             }
                             else{
-
+                                Toast.makeText(getApplicationContext(), "WOO", Toast.LENGTH_LONG).show();
                             }
                         }
                         catch(UnsupportedEncodingException e){
