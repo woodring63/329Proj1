@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import org.bytedeco.javacpp.opencv_face;
 import org.json.JSONException;
@@ -32,6 +33,8 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     String mCurrentPhotoPath;
+    boolean detectSuccess = false;
+    boolean recognizeSuccess = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +51,42 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(String response) {
+
                 Log.d("KAIROS DEMO", response);
+                if(response.contains("failure")){
+                    recognizeSuccess = false;
+                }
+                else{
+                    recognizeSuccess = true;
+                }
+
+
             }
 
             @Override
             public void onFail(String response) {
                 Log.d("KAIROS DEMO", response);
+            }
+        };
+        final KairosListener detectListener = new KairosListener() {
+            @Override
+            public void onSuccess(String s) {
+                if(s.contains("ErrCode")){
+                    Toast.makeText(getApplicationContext(), "There seems to have been an error, " +
+                            "try retaking the photo and try again", Toast.LENGTH_LONG).show();
+                    detectSuccess = false;
+                }
+                else{
+                    detectSuccess = true;
+
+                }
+            }
+
+            @Override
+            public void onFail(String s) {
+                Toast.makeText(getApplicationContext(), "Error", Toast.LENGTH_LONG).show();
+                detectSuccess = false;
+
             }
         };
 
@@ -74,27 +107,43 @@ public class MainActivity extends AppCompatActivity {
         analyzeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BitmapFactory.Options option = new BitmapFactory.Options();
-                Bitmap image = BitmapFactory.decodeFile(mCurrentPhotoPath, option);
-                image = Bitmap.createScaledBitmap(image, 267, 200, true);
-                Matrix matrix = new Matrix();
-                matrix.postRotate(90);
-                image = Bitmap.createBitmap(image , 0, 0, image.getWidth(), image.getHeight(), matrix, true);
-                try {
-                    myKairos.enroll(image, "Test", "students", "FULL", "false", "0.25", listener);
+                if (mCurrentPhotoPath != null) {
+                    BitmapFactory.Options option = new BitmapFactory.Options();
+                    Bitmap image = BitmapFactory.decodeFile(mCurrentPhotoPath, option);
+                    image = Bitmap.createScaledBitmap(image, 267, 200, true);
+                    Matrix matrix = new Matrix();
+                    matrix.postRotate(90);
+                    image = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
+                    try {
+                        myKairos.detect(image, "FULL", "0.25", detectListener);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                    if(detectSuccess == true){
+                        try{
+                            myKairos.recognize(image, "students", "FULL", "0.75", "0.25", "1", listener);
+                            if(recognizeSuccess == false){
+
+                            }
+                            else{
+
+                            }
+                        }
+                        catch(UnsupportedEncodingException e){
+                            e.printStackTrace();
+                        }
+                        catch(JSONException e){
+                            e.printStackTrace();
+                        }
+                    }
+                    Log.v("Test", mCurrentPhotoPath);
                 }
-                catch(JSONException e){
-                    e.printStackTrace();
+                else{
+                    Toast.makeText(getApplicationContext(), "You need to take a picture first!", Toast.LENGTH_LONG).show();
                 }
-                catch(UnsupportedEncodingException e){
-                    e.printStackTrace();
-                }
-                Log.v("Test", mCurrentPhotoPath);
             }
-               /* Intent i = new Intent(getApplicationContext(), PhotoDisplayActivity.class);
-                i.putExtra("filePath", mCurrentPhotoPath);
-                startActivity(i);
-            }*/
 
 
         });
