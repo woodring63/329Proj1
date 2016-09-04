@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -31,96 +32,79 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     String mCurrentPhotoPath;
-    Kairos myKairos;
-    KairosListener listener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        myKairos = new Kairos();
-
-// set authentication
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, 200);
+        }
+        final Kairos myKairos = new Kairos();
         String app_id = "a5511edf";
         String api_key = "03a203d5f7ed2650eaa9f3cb37fd5b92";
         myKairos.setAuthentication(this, app_id, api_key);
-
-        listener = new KairosListener() {
+        final KairosListener listener = new KairosListener() {
 
             @Override
             public void onSuccess(String response) {
-                // your code here!
                 Log.d("KAIROS DEMO", response);
             }
 
             @Override
             public void onFail(String response) {
-                // your code here!
                 Log.d("KAIROS DEMO", response);
             }
         };
-        /*try {
-            Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.test_photo);
-            String subjectId = "Chris Soules";
-            String galleryId = "students";
-            String selector = "FULL";
-            String multipleFaces = "false";
-            String minHeadScale = "0.25";
-            myKairos.enroll(image,
-                    subjectId,
-                    galleryId,
-                    selector,
-                    multipleFaces,
-                    minHeadScale,
-                    listener);        } catch (UnsupportedEncodingException e) {
 
-        } catch (JSONException e) {
 
-        }*/
+
 
 
         Button cameraButton = (Button) findViewById(R.id.btn_open_camera);
         cameraButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.CAMERA}, 200);
-                }
+
                 dispatchTakePictureIntent();
+
             }
         });
         Button analyzeButton = (Button) findViewById(R.id.btn_analyze);
         analyzeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                BitmapFactory.Options option = new BitmapFactory.Options();
+                Bitmap image = BitmapFactory.decodeFile(mCurrentPhotoPath, option);
+                image = Bitmap.createScaledBitmap(image, 267, 200, true);
+                Matrix matrix = new Matrix();
+                matrix.postRotate(90);
+                image = Bitmap.createBitmap(image , 0, 0, image.getWidth(), image.getHeight(), matrix, true);
                 try {
-
-                    Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.test_photo);
-                    String galleryId = "students";
-                    String selector = "FULL";
-                    String threshold = "0.75";
-                    String minHeadScale = "0.25";
-                    String maxNumResults = "25";
-                    myKairos.recognize(image,
-                            galleryId,
-                            selector,
-                            threshold,
-                            minHeadScale,
-                            maxNumResults,
-                            listener);
+                    myKairos.enroll(image, "Test", "students", "FULL", "false", "0.25", listener);
                 }
-                catch (JSONException e){
-
+                catch(JSONException e){
+                    e.printStackTrace();
                 }
-                catch (UnsupportedEncodingException e){
-
+                catch(UnsupportedEncodingException e){
+                    e.printStackTrace();
                 }
-
+                Log.v("Test", mCurrentPhotoPath);
             }
+               /* Intent i = new Intent(getApplicationContext(), PhotoDisplayActivity.class);
+                i.putExtra("filePath", mCurrentPhotoPath);
+                startActivity(i);
+            }*/
+
+
         });
 
 
+
+
+
     }
+
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -157,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = "file:" + image.getAbsolutePath();
+        mCurrentPhotoPath = image.getAbsolutePath();
         return image;
     }
 
