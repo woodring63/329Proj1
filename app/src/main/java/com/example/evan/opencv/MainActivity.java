@@ -50,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
         String app_id = "a5511edf";
         String api_key = "03a203d5f7ed2650eaa9f3cb37fd5b92";
         myKairos.setAuthentication(this, app_id, api_key);
+
+        //listener for the actual recognizing
         final KairosListener listener = new KairosListener() {
 
             @Override
@@ -68,13 +70,14 @@ public class MainActivity extends AppCompatActivity {
                     recognizeSuccess = true;
                 }
             }
-            
+
 
             @Override
             public void onFail(String response) {
                 Log.d("KAIROS DEMO", response);
             }
         };
+        //listener for detecting a face in the image
         final KairosListener detectListener = new KairosListener() {
             @Override
             public void onSuccess(String s) {
@@ -96,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-
+        //launches the camera
         Button cameraButton = (Button) findViewById(R.id.btn_open_camera);
         cameraButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,12 +114,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (mCurrentPhotoPath != null) {
+                    //Convert last photo taken to a Bitmap and rotate
                     BitmapFactory.Options option = new BitmapFactory.Options();
                     Bitmap image = BitmapFactory.decodeFile(mCurrentPhotoPath, option);
                     image = Bitmap.createScaledBitmap(image, 267, 200, true);
                     Matrix matrix = new Matrix();
                     matrix.postRotate(90);
                     image = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
+                    //detect faces in the image
                     try {
                         myKairos.detect(image, "FULL", "0.25", detectListener);
                     } catch (JSONException e) {
@@ -124,13 +129,16 @@ public class MainActivity extends AppCompatActivity {
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
+                    //if there are faces, try recognizing
                     if (detectSuccess == true) {
                         try {
                             myKairos.recognize(image, "students", "FULL", "0.75", "0.25", "1", listener);
+                            //if not recognized, prompt user for the student's name
                             if (recognizeSuccess == false) {
                                 Intent i = new Intent(getApplicationContext(), EnterNewStudentActivity.class);
                                 i.putExtra("filename", mCurrentPhotoPath);
                                 startActivity(i);
+                                //if recognized, send to another activity with face and name displayed
                             } else {
                                 Intent i = new Intent(getApplicationContext(), PhotoDisplayActivity.class);
                                 i.putExtra("filename", mCurrentPhotoPath);
