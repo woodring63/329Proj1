@@ -22,7 +22,9 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import org.bytedeco.javacpp.opencv_face;
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     String mCurrentPhotoPath;
     boolean detectSuccess = false;
     boolean recognizeSuccess;
+    String studentName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,17 +55,20 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String response) {
 
+
                 Log.d("KAIROS DEMO", response);
-                if(response.contains("failure")){
-                    Log.v("Test", "Nope");
+
+
+                if (response.contains("failure")) {
+                    Log.v("Test", "No");
                     recognizeSuccess = false;
-                }
-                else{
+                } else {
+                    Log.v("Test", "YES");
+
                     recognizeSuccess = true;
                 }
-
-
             }
+            
 
             @Override
             public void onFail(String response) {
@@ -72,12 +78,11 @@ public class MainActivity extends AppCompatActivity {
         final KairosListener detectListener = new KairosListener() {
             @Override
             public void onSuccess(String s) {
-                if(s.contains("ErrCode")){
+                if (s.contains("ErrCode")) {
                     Toast.makeText(getApplicationContext(), "There seems to have been an error, " +
                             "try retaking the photo and try again", Toast.LENGTH_LONG).show();
                     detectSuccess = false;
-                }
-                else{
+                } else {
                     detectSuccess = true;
 
                 }
@@ -90,9 +95,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         };
-
-
-
 
 
         Button cameraButton = (Button) findViewById(R.id.btn_open_camera);
@@ -122,37 +124,33 @@ public class MainActivity extends AppCompatActivity {
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
-                    if(detectSuccess == true){
-                        try{
+                    if (detectSuccess == true) {
+                        try {
                             myKairos.recognize(image, "students", "FULL", "0.75", "0.25", "1", listener);
-                            if(recognizeSuccess == false){
+                            if (recognizeSuccess == false) {
                                 Intent i = new Intent(getApplicationContext(), EnterNewStudentActivity.class);
                                 i.putExtra("filename", mCurrentPhotoPath);
                                 startActivity(i);
+                            } else {
+                                Intent i = new Intent(getApplicationContext(), PhotoDisplayActivity.class);
+                                i.putExtra("filename", mCurrentPhotoPath);
+                                i.putExtra("studentName", "Evan");
+                                startActivity(i);
                             }
-                            else{
-                                Toast.makeText(getApplicationContext(), "WOO", Toast.LENGTH_LONG).show();
-                            }
-                        }
-                        catch(UnsupportedEncodingException e){
+                        } catch (UnsupportedEncodingException e) {
                             e.printStackTrace();
-                        }
-                        catch(JSONException e){
+                        } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
                     Log.v("Test", mCurrentPhotoPath);
-                }
-                else{
+                } else {
                     Toast.makeText(getApplicationContext(), "You need to take a picture first!", Toast.LENGTH_LONG).show();
                 }
             }
 
 
         });
-
-
-
 
 
     }
