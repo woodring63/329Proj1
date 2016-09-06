@@ -35,8 +35,7 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     String mCurrentPhotoPath;
-    boolean detectSuccess = false;
-    boolean recognizeSuccess;
+    Bitmap image;
     String studentName;
 
     @Override
@@ -62,12 +61,14 @@ public class MainActivity extends AppCompatActivity {
 
 
                 if (response.contains("failure")) {
-                    Log.v("Test", "No");
-                    recognizeSuccess = false;
+                    Intent i = new Intent(getApplicationContext(), EnterNewStudentActivity.class);
+                    i.putExtra("filename", mCurrentPhotoPath);
+                    startActivity(i);
                 } else {
-                    Log.v("Test", "YES");
-
-                    recognizeSuccess = true;
+                    Intent i = new Intent(getApplicationContext(), PhotoDisplayActivity.class);
+                    i.putExtra("filename", mCurrentPhotoPath);
+                    i.putExtra("studentName", "Evan");
+                    startActivity(i);
                 }
             }
 
@@ -84,9 +85,15 @@ public class MainActivity extends AppCompatActivity {
                 if (s.contains("ErrCode")) {
                     Toast.makeText(getApplicationContext(), "There seems to have been an error, " +
                             "try retaking the photo and try again", Toast.LENGTH_LONG).show();
-                    detectSuccess = false;
                 } else {
-                    detectSuccess = true;
+                    try {
+                        myKairos.recognize(image, "students", "FULL", "0.75", "0.25", "1", listener);
+                        //if not recognized, prompt user for the student's name
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
 
                 }
             }
@@ -94,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFail(String s) {
                 Toast.makeText(getApplicationContext(), "Error", Toast.LENGTH_LONG).show();
-                detectSuccess = false;
 
             }
         };
@@ -116,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 if (mCurrentPhotoPath != null) {
                     //Convert last photo taken to a Bitmap and rotate
                     BitmapFactory.Options option = new BitmapFactory.Options();
-                    Bitmap image = BitmapFactory.decodeFile(mCurrentPhotoPath, option);
+                    image = BitmapFactory.decodeFile(mCurrentPhotoPath, option);
                     image = Bitmap.createScaledBitmap(image, 267, 200, true);
                     Matrix matrix = new Matrix();
                     matrix.postRotate(90);
@@ -130,28 +136,8 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                     //if there are faces, try recognizing
-                    if (detectSuccess == true) {
-                        try {
-                            myKairos.recognize(image, "students", "FULL", "0.75", "0.25", "1", listener);
-                            //if not recognized, prompt user for the student's name
-                            if (recognizeSuccess == false) {
-                                Intent i = new Intent(getApplicationContext(), EnterNewStudentActivity.class);
-                                i.putExtra("filename", mCurrentPhotoPath);
-                                startActivity(i);
-                                //if recognized, send to another activity with face and name displayed
-                            } else {
-                                Intent i = new Intent(getApplicationContext(), PhotoDisplayActivity.class);
-                                i.putExtra("filename", mCurrentPhotoPath);
-                                i.putExtra("studentName", "Evan");
-                                startActivity(i);
-                            }
-                        } catch (UnsupportedEncodingException e) {
-                            e.printStackTrace();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    Log.v("Test", mCurrentPhotoPath);
+
+
                 } else {
                     Toast.makeText(getApplicationContext(), "You need to take a picture first!", Toast.LENGTH_LONG).show();
                 }
