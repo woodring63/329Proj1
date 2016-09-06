@@ -59,12 +59,22 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.d("KAIROS DEMO", response);
 
-
                 if (response.contains("failure")) {
                     Intent i = new Intent(getApplicationContext(), EnterNewStudentActivity.class);
                     i.putExtra("filename", mCurrentPhotoPath);
                     startActivity(i);
                 } else {
+                    try {
+                        //TODO: Parse JSON response for subject (images.
+                        JSONObject json = new JSONObject(response);
+                        Log.v("Test", json.getJSONArray("images").toString());
+                    ;
+
+
+                    }
+                    catch(JSONException e){
+                        e.printStackTrace();
+                    }
                     Intent i = new Intent(getApplicationContext(), PhotoDisplayActivity.class);
                     i.putExtra("filename", mCurrentPhotoPath);
                     i.putExtra("studentName", "Evan");
@@ -123,17 +133,23 @@ public class MainActivity extends AppCompatActivity {
                     //Convert last photo taken to a Bitmap and rotate
                     BitmapFactory.Options option = new BitmapFactory.Options();
                     image = BitmapFactory.decodeFile(mCurrentPhotoPath, option);
-                    image = Bitmap.createScaledBitmap(image, 267, 200, true);
-                    Matrix matrix = new Matrix();
-                    matrix.postRotate(90);
-                    image = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
-                    //detect faces in the image
-                    try {
-                        myKairos.detect(image, "FULL", "0.25", detectListener);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
+                    if(image != null) {
+                        image = Bitmap.createScaledBitmap(image, 267, 200, true);
+                        Matrix matrix = new Matrix();
+                        matrix.postRotate(90);
+                        image = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
+                        //detect faces in the image
+                        try {
+                            myKairos.detect(image, "FULL", "0.25", detectListener);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "You need to take a picture first!", Toast.LENGTH_LONG).show();
+
                     }
                     //if there are faces, try recognizing
 
