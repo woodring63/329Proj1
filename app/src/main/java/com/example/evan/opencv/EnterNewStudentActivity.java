@@ -63,9 +63,9 @@ public class EnterNewStudentActivity extends AppCompatActivity {
                 }
                 else {
 
-
+                    Log.v("Test", name.getText().toString().replaceAll(" ", ""));
                     try {
-                        myKairos.enroll(image, name.getText().toString(), "students", "FULL", "false", "0.25", listener);
+                        myKairos.enroll(image, name.getText().toString().replaceAll(" ", ""), "students", "FULL", "false", "0.25", listener);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     } catch (UnsupportedEncodingException e) {

@@ -65,10 +65,12 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(i);
                 } else {
                     try {
-                        //TODO: Parse JSON response for subject (images.
                         JSONObject json = new JSONObject(response);
-                        Log.v("Test", json.getJSONArray("images").toString());
-                    ;
+                        JSONArray arr = (JSONArray) json.get("images");
+                        json = (JSONObject) arr.get(0);
+                        json = (JSONObject) json.get("transaction");
+                        studentName = (String) json.get("subject");
+                        Log.v("Test",studentName);
 
 
                     }
@@ -77,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     Intent i = new Intent(getApplicationContext(), PhotoDisplayActivity.class);
                     i.putExtra("filename", mCurrentPhotoPath);
-                    i.putExtra("studentName", "Evan");
+                    i.putExtra("studentName", studentName);
                     startActivity(i);
                 }
             }
@@ -97,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
                             "try retaking the photo and try again", Toast.LENGTH_LONG).show();
                 } else {
                     try {
-                        myKairos.recognize(image, "students", "FULL", "0.75", "0.25", "1", listener);
+                        myKairos.recognize(image, "students", "FULL", "0.5", "0.25", "1", listener);
                         //if not recognized, prompt user for the student's name
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
@@ -129,7 +131,14 @@ public class MainActivity extends AppCompatActivity {
         analyzeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+            }
+        });
+        analyzeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 if (mCurrentPhotoPath != null) {
+                    Toast.makeText(getApplicationContext(), "Processing...", Toast.LENGTH_LONG).show();
                     //Convert last photo taken to a Bitmap and rotate
                     BitmapFactory.Options option = new BitmapFactory.Options();
                     image = BitmapFactory.decodeFile(mCurrentPhotoPath, option);
